@@ -1,0 +1,21 @@
+{
+  "name": "cut",
+  "version": "1.0.0",
+  "description": "Server for storing upload images",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Stanislav Vetlovskiy <mrerliz@gmail.com> (https://erliz.ru/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Erliz/cut/issues"
+  },
+  "homepage": "https://github.com/Erliz/cut#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "file-type": "^3.8.0",
+    "randomstring": "^1.1.5"
+  },
+  "devDependencies": {}
+}
