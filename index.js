@@ -19,7 +19,9 @@ function fileReceiveMiddleware(req, res, next) {
   var fileType;
   req.on('data', function(chunk){
     content.push(chunk);
-    fileType = FileType(chunk);
+    if (!fileType) {
+      fileType = FileType(chunk);
+    }
   });
   req.on('end', function () {
     req.file = {
