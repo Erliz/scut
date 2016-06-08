@@ -20,7 +20,7 @@ function fileReceiveMiddleware(req, res, next) {
   req.on('data', function(chunk){
     content.push(chunk);
     if (!fileType) {
-      fileType = FileType(chunk);
+      fileType = FileType(Buffer.concat(content));
     }
   });
   req.on('end', function () {
@@ -87,7 +87,7 @@ app.put('/:file', fileReceiveMiddleware, function (req, res) {
     })
     .catch(function(err) {
       console.error(err);
-      res.send(err.message);
+      res.status(500).send(err.message);
     });
 });
 
