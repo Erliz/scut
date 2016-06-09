@@ -8,6 +8,7 @@ Cut is a server to hold your screenshots and a client to post them on it
 * Make screenshot (cmd+shift+3)
 * Share your direct short image url with friends and colleague
 * No more ADs! :tada:
+
 ## Server
 
 #### Local
