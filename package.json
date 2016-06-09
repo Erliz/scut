@@ -1,17 +1,17 @@
 {
-  "name": "cut",
-  "version": "1.0.0",
+  "name": "scut",
+  "version": "1.1.0",
   "description": "Server for storing upload images",
   "scripts": {
-    "start": "node index.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Stanislav Vetlovskiy <mrerliz@gmail.com> (https://erliz.ru/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Erliz/cut/issues"
+    "url": "https://github.com/Erliz/scut/issues"
   },
-  "homepage": "https://github.com/Erliz/cut#readme",
+  "homepage": "https://github.com/Erliz/scut#readme",
   "dependencies": {
     "express": "^4.13.4",
     "file-type": "^3.8.0",
