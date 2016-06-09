@@ -8,25 +8,31 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/urfave/cli"
 )
 
 var config struct {
-	command  string
-	onmodify bool
-	remove   bool
-	url      string
-	verbose  bool
-	workdir  string
+	command      string
+	onmodify     bool
+	remove       bool
+	url          string
+	verbose      bool
+	workdir      string
+	writeTimeout int
 }
+
+var lastWrite map[string]time.Time
+var mutex = &sync.Mutex{}
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Cut client"
+	app.Name = "SCut client"
 	app.Usage = "watch the workdir for new image files and upload them to url"
-	app.Version = "1.0.0"
+	app.Version = "1.1.0"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name:  "Stanislav Vetlovskiy",
@@ -68,16 +74,37 @@ func main() {
 			Usage:       "need for virtual env, cause there is no create event, just chmod",
 			Destination: &config.onmodify,
 		},
+		cli.IntFlag{
+			Name:        "timeout, t",
+			Value:       300,
+			Usage:       "upload timeout in ms after last write to file",
+			Destination: &config.writeTimeout,
+		},
 	}
 	app.Action = func(c *cli.Context) error {
 		if !config.verbose {
 			log.SetOutput(ioutil.Discard)
 		}
+		lastWrite = make(map[string]time.Time)
 		serve()
 		return nil
 	}
 
 	app.Run(os.Args)
+}
+
+func updateFileWriteTime(filePath string) {
+	mutex.Lock()
+	lastWrite[filePath] = time.Now()
+	mutex.Unlock()
+}
+
+func getFileWriteTime(filePath string) time.Time {
+	mutex.Lock()
+	writeTime := lastWrite[filePath]
+	mutex.Unlock()
+
+	return writeTime
 }
 
 func serve() {
@@ -87,16 +114,19 @@ func serve() {
 		log.Fatal(err)
 	}
 	defer watcher.Close()
-
 	done := make(chan bool)
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op == fsnotify.Create {
-					onCreateHandler(event)
+					updateFileWriteTime(event.Name)
+					go onCreateHandler(event)
 				} else if config.onmodify && event.Op == fsnotify.Chmod {
-					onCreateHandler(event)
+					updateFileWriteTime(event.Name)
+					go onCreateHandler(event)
+				} else if event.Op == fsnotify.Write {
+					updateFileWriteTime(event.Name)
 				} else {
 					log.Print("Detect not handled event: ", event)
 				}
@@ -116,6 +146,15 @@ func serve() {
 
 func onCreateHandler(e fsnotify.Event) {
 	log.Print("Find new file: ", e.Name)
+	for {
+		if (time.Since(getFileWriteTime(e.Name)) / time.Millisecond) > time.Duration(config.writeTimeout) {
+			break
+		} else {
+			log.Print("Waiting till write done for: ", e.Name)
+			time.Sleep(time.Duration(config.writeTimeout) * time.Millisecond)
+		}
+	}
+
 	filePath := e.Name
 	fileExtension := filepath.Ext(filePath)
 	switch fileExtension {
@@ -159,7 +198,7 @@ func onImageCreateHandler(filePath string) {
 	}
 }
 
-func upload(filePath string) (responseString string, ok bool) {
+func upload(filePath string) (response string, ok bool) {
 	url := config.url + filepath.Base(filePath)
 	fileHandler, err := os.Open(filePath)
 	if err != nil {
