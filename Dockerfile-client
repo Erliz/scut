@@ -1,0 +1,10 @@
+FROM golang:1.6-onbuild
+
+MAINTAINER Stanislav Vetlovskiy <mrerliz@gmail.com>
+
+ENV APP_URL             'http://localhost:3000/'
+ENV APP_WORKDIR         '/storage/'
+
+VOLUME ["/storage"]
+
+CMD ["app", "--help"]
