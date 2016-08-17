@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -156,7 +157,7 @@ func onCreateHandler(e fsnotify.Event) {
 	}
 
 	filePath := e.Name
-	fileExtension := filepath.Ext(filePath)
+	fileExtension := strings.ToLower(filepath.Ext(filePath))
 	switch fileExtension {
 	case ".gif":
 		fallthrough
